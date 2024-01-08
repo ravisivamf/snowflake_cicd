@@ -1,5 +1,4 @@
-name:snowflake_CICD
-
+name: snowflake_CICD
 on:
   push:
     branches:
