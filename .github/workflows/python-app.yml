@@ -8,6 +8,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  paths:
+    - 'dbscripts/**'
 
 permissions:
   contents: read
@@ -28,12 +30,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pytest
+      - name: Run schemachange
+        env:
+          SF_ACCOUNT:  ${{ secrets.SF_ACCOUNT}}
+          SF_USERNAME: ${{ secrets.SF_USERNAME}}
+          SF_ROLE: ${{ secrets.SF_ROLE}}
+          SF_WAREHOUSE: ${{ secrets.SF_WAREHOUSE}}
+          SF_DATABASE: ${{secrets.SF_DATABASE}}
+          SF_PASSWORD: ${{secrets.SF_PASSWORD}}
+        run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          python-version
+          echo "Step 1: installing schemachange"
+          pip install schemachange
+
+          echo "Step 2: running schemachange"
+          schemachange -f $GITHUB_WORKSPACE/dbscripts -a $SF_ACCOUNT -u $SF_USERNAME -r $SF_ROLE -w $SF_WAREHOUSE -d $SF_DATABAS -c $SF_DATABASE.SCHEMACHANGE.CHANGE_HISTORY --Create chagne history table
